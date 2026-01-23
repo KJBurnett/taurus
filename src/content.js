@@ -797,7 +797,8 @@
             const renameItem = document.createElement('div');
             renameItem.className = 'folder-option-item';
             renameItem.innerHTML = `${Icons.edit} Rename`;
-            renameItem.addEventListener('click', () => {
+            renameItem.addEventListener('click', (e) => {
+                e.stopPropagation();
                 this.handleRenameChat(folderId, chat.id, chat.title);
                 menu.remove();
             });
@@ -807,12 +808,11 @@
             const removeItem = document.createElement('div');
             removeItem.className = 'folder-option-item';
             removeItem.innerHTML = `${Icons.close} Remove`;
-            removeItem.addEventListener('click', () => {
-                // We can reuse addChatToFolder with 'remove_from_folders' logic, 
-                // but that removes from ALL folders. 
-                // If we want to remove just from THIS folder?
-                // The storage logic currently is 1:1 (move-to). So remove_from_folders is practically the same as removing from this folder.
-                this.moveChatToFolder('remove_from_folders');
+            removeItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // We use Storage directly to remove THIS specific chat object, 
+                // avoiding moveChatToFolder which relies on current page context (bug fix)
+                Storage.addChatToFolder(chat, 'remove_from_folders');
                 menu.remove();
             });
             menu.appendChild(removeItem);
