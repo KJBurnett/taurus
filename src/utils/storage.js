@@ -144,11 +144,12 @@ export const Storage = {
     /**
      * Add a new folder
      */
-    addFolder: async (name) => {
+    addFolder: async (name, color = null) => {
         const data = await Storage.get();
         const newFolder = {
             id: 'folder_' + Date.now(),
             name: name,
+            color: color,
             chats: []
         };
         data.folders.push(newFolder);
@@ -169,14 +170,24 @@ export const Storage = {
     /**
      * Rename folder
      */
-    renameFolder: async (folderId, newName) => {
+    /**
+     * Update folder properties (name, color, etc)
+     */
+    updateFolder: async (folderId, updates) => {
         const data = await Storage.get();
         const folder = data.folders.find(f => f.id === folderId);
         if (folder) {
-            folder.name = newName;
+            Object.assign(folder, updates);
         }
         await Storage.set(data);
         return data;
+    },
+
+    /**
+     * Rename folder (Deprecated - use updateFolder)
+     */
+    renameFolder: async (folderId, newName) => {
+        return Storage.updateFolder(folderId, { name: newName });
     },
 
     /**

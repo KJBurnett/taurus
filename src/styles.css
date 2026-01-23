@@ -493,3 +493,114 @@
 .gemini-modal-btn.confirm:hover {
     opacity: 0.9;
 }
+
+/* Folder Colors */
+:root {
+    --folder-color-blue: #a8c7fa;
+    --folder-color-green: #c3eed0;
+    --folder-color-yellow: #fff0c7;
+    --folder-color-red: #f28b82;
+    --folder-color-purple: #d7aefb;
+    --folder-color-cyan: #a7ffeb;
+    --folder-color-orange: #ffccbc;
+    --folder-color-pink: #f8bbd0;
+}
+
+.gemini-folder-item[data-color="blue"] {
+    color: var(--folder-color-blue) !important;
+}
+
+.gemini-folder-item[data-color="green"] {
+    color: var(--folder-color-green) !important;
+}
+
+.gemini-folder-item[data-color="yellow"] {
+    color: var(--folder-color-yellow) !important;
+}
+
+.gemini-folder-item[data-color="red"] {
+    color: var(--folder-color-red) !important;
+}
+
+.gemini-folder-item[data-color="purple"] {
+    color: var(--folder-color-purple) !important;
+}
+
+.gemini-folder-item[data-color="cyan"] {
+    color: var(--folder-color-cyan) !important;
+}
+
+.gemini-folder-item[data-color="orange"] {
+    color: var(--folder-color-orange) !important;
+}
+
+.gemini-folder-item[data-color="pink"] {
+    color: var(--folder-color-pink) !important;
+}
+
+/* Apply to icon too if needed */
+.gemini-folder-item[data-color] svg {
+    color: inherit;
+}
+
+/* Color Picker UI */
+.gemini-color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s, border-color 0.1s;
+}
+
+.color-swatch:hover {
+    transform: scale(1.1);
+}
+
+.color-swatch.selected {
+    border-color: #fff;
+    transform: scale(1.2);
+}
+
+.swatch-default {
+    background-color: var(--gem-sys-color--on-surface-variant, #aaa);
+}
+
+.swatch-blue {
+    background-color: var(--folder-color-blue);
+}
+
+.swatch-green {
+    background-color: var(--folder-color-green);
+}
+
+.swatch-yellow {
+    background-color: var(--folder-color-yellow);
+}
+
+.swatch-red {
+    background-color: var(--folder-color-red);
+}
+
+.swatch-purple {
+    background-color: var(--folder-color-purple);
+}
+
+.swatch-cyan {
+    background-color: var(--folder-color-cyan);
+}
+
+.swatch-orange {
+    background-color: var(--folder-color-orange);
+}
+
+.swatch-pink {
+    background-color: var(--folder-color-pink);
+}

@@ -31,6 +31,9 @@
             this.currentChatTitle = null;
             this.expandedFolders = new Set();
             this.lastSynced = null; // Cache for UI
+            this.folderColors = [
+                'default', 'blue', 'green', 'yellow', 'red', 'purple', 'cyan', 'orange', 'pink'
+            ];
         }
 
         async init() {
@@ -412,17 +415,17 @@
         }
 
         handleCreateFolder() {
-            this.showInputDialog('New Folder', '', (name) => {
+            this.showFolderDialog('New Folder', null, (name, color) => {
                 if (name) {
-                    Storage.addFolder(name);
+                    Storage.addFolder(name, color);
                 }
             });
         }
 
-        handleRenameFolder(folderId, currentName) {
-            this.showInputDialog('Rename Folder', currentName, (name) => {
-                if (name && name !== currentName) {
-                    Storage.renameFolder(folderId, name);
+        handleRenameFolder(folderId, currentName, currentColor) {
+            this.showFolderDialog('Rename Folder', { name: currentName, color: currentColor }, (name, color) => {
+                if (name) {
+                    Storage.updateFolder(folderId, { name, color });
                 }
             });
         }
@@ -433,6 +436,70 @@
                     Storage.renameChat(folderId, chatId, name);
                 }
             });
+        }
+
+        showFolderDialog(title, folder = null, onConfirm) {
+            const overlay = document.createElement('div');
+            overlay.className = 'gemini-folders-modal-overlay';
+
+            const defaultValue = folder ? folder.name : '';
+            const selectedColor = folder ? folder.color || 'default' : 'default';
+
+            overlay.innerHTML = `
+                <div class="gemini-folders-modal">
+                    <h3 class="gemini-modal-title">${title}</h3>
+                    <input type="text" class="gemini-modal-input" placeholder="Folder Name" value="${defaultValue}" spellcheck="false" autocomplete="off">
+                    <div class="gemini-modal-label" style="font-size: 12px; color: #aaa; margin-bottom: 8px;">Folder Color</div>
+                    <div class="gemini-color-picker">
+                        ${this.folderColors.map(c => `
+                            <div class="color-swatch swatch-${c} ${c === selectedColor ? 'selected' : ''}" data-color="${c}" title="${c.charAt(0).toUpperCase() + c.slice(1)}"></div>
+                        `).join('')}
+                    </div>
+                    <div class="gemini-modal-actions">
+                        <button class="gemini-modal-btn cancel">Cancel</button>
+                        <button class="gemini-modal-btn confirm">Confirm</button>
+                    </div>
+                </div>
+            `;
+
+            const input = overlay.querySelector('.gemini-modal-input');
+            const confirmBtn = overlay.querySelector('.confirm');
+            const cancelBtn = overlay.querySelector('.cancel');
+            const swatches = overlay.querySelectorAll('.color-swatch');
+
+            let currentColor = selectedColor;
+
+            swatches.forEach(swatch => {
+                swatch.addEventListener('click', () => {
+                    swatches.forEach(s => s.classList.remove('selected'));
+                    swatch.classList.add('selected');
+                    currentColor = swatch.dataset.color;
+                });
+            });
+
+            const close = () => overlay.remove();
+
+            confirmBtn.addEventListener('click', () => {
+                const name = input.value.trim();
+                const color = currentColor === 'default' ? null : currentColor;
+                onConfirm(name, color);
+                close();
+            });
+
+            cancelBtn.addEventListener('click', close);
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) close();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') confirmBtn.click();
+                if (e.key === 'Escape') close();
+            });
+
+            document.body.appendChild(overlay);
+            input.focus();
+            input.select();
         }
 
         showInputDialog(title, defaultValue, onConfirm) {
@@ -677,6 +744,9 @@
 
                 const headerEl = document.createElement('div');
                 headerEl.className = 'gemini-folder-item';
+                if (folder.color) {
+                    headerEl.dataset.color = folder.color;
+                }
                 const expanded = this.expandedFolders.has(folder.id);
 
                 headerEl.innerHTML = `
@@ -756,7 +826,7 @@
             renameItem.className = 'folder-option-item';
             renameItem.innerHTML = `${Icons.edit} Rename`;
             renameItem.addEventListener('click', () => {
-                this.handleRenameFolder(folder.id, folder.name);
+                this.handleRenameFolder(folder.id, folder.name, folder.color);
                 menu.remove();
             });
             menu.appendChild(renameItem);
