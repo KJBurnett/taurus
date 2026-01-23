@@ -422,8 +422,8 @@
             });
         }
 
-        handleRenameFolder(folderId, currentName, currentColor) {
-            this.showFolderDialog('Rename Folder', { name: currentName, color: currentColor }, (name, color) => {
+        handleEditFolder(folderId, currentName, currentColor) {
+            this.showFolderDialog('Edit Folder', { name: currentName, color: currentColor }, (name, color) => {
                 if (name) {
                     Storage.updateFolder(folderId, { name, color });
                 }
@@ -747,6 +747,9 @@
                 if (folder.color) {
                     headerEl.dataset.color = folder.color;
                 }
+                if (folder.chats.length === 0) {
+                    headerEl.dataset.empty = "true";
+                }
                 const expanded = this.expandedFolders.has(folder.id);
 
                 headerEl.innerHTML = `
@@ -821,15 +824,15 @@
             const menu = document.createElement('div');
             menu.className = 'folder-options-menu show';
 
-            // Rename
-            const renameItem = document.createElement('div');
-            renameItem.className = 'folder-option-item';
-            renameItem.innerHTML = `${Icons.edit} Rename`;
-            renameItem.addEventListener('click', () => {
-                this.handleRenameFolder(folder.id, folder.name, folder.color);
+            // Edit (Rename/Color)
+            const editItem = document.createElement('div');
+            editItem.className = 'folder-option-item';
+            editItem.innerHTML = `${Icons.edit} Edit`;
+            editItem.addEventListener('click', () => {
+                this.handleEditFolder(folder.id, folder.name, folder.color);
                 menu.remove();
             });
-            menu.appendChild(renameItem);
+            menu.appendChild(editItem);
 
             // Delete
             const deleteItem = document.createElement('div');

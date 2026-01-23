@@ -506,36 +506,45 @@
     --folder-color-pink: #f8bbd0;
 }
 
-.gemini-folder-item[data-color="blue"] {
+.gemini-folder-item[data-color="blue"]:not([data-empty]) {
     color: var(--folder-color-blue) !important;
 }
 
-.gemini-folder-item[data-color="green"] {
+.gemini-folder-item[data-color="green"]:not([data-empty]) {
     color: var(--folder-color-green) !important;
 }
 
-.gemini-folder-item[data-color="yellow"] {
+.gemini-folder-item[data-color="yellow"]:not([data-empty]) {
     color: var(--folder-color-yellow) !important;
 }
 
-.gemini-folder-item[data-color="red"] {
+.gemini-folder-item[data-color="red"]:not([data-empty]) {
     color: var(--folder-color-red) !important;
 }
 
-.gemini-folder-item[data-color="purple"] {
+.gemini-folder-item[data-color="purple"]:not([data-empty]) {
     color: var(--folder-color-purple) !important;
 }
 
-.gemini-folder-item[data-color="cyan"] {
+.gemini-folder-item[data-color="cyan"]:not([data-empty]) {
     color: var(--folder-color-cyan) !important;
 }
 
-.gemini-folder-item[data-color="orange"] {
+.gemini-folder-item[data-color="orange"]:not([data-empty]) {
     color: var(--folder-color-orange) !important;
 }
 
-.gemini-folder-item[data-color="pink"] {
+.gemini-folder-item[data-color="pink"]:not([data-empty]) {
     color: var(--folder-color-pink) !important;
+}
+
+/* Empty state styling */
+.gemini-folder-item[data-empty] {
+    opacity: 0.5;
+}
+
+.gemini-folder-item[data-empty]:hover {
+    opacity: 1;
 }
 
 /* Apply to icon too if needed */
