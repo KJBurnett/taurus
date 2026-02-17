@@ -221,7 +221,7 @@
         }
 
         updateCurrentChatTitle() {
-            this.currentChatTitle = getChatTitle(document);
+            this.currentChatTitle = getChatTitle(this.currentChatId, document);
         }
 
         ensureMoveButtonAndIndicator() {
@@ -400,20 +400,34 @@
             // Check for title one last time
             this.updateCurrentChatTitle();
 
-            // Priority:
-            // 1. Title from header (this.currentChatTitle)
-            // 2. document.title (if it doesn't just say "Gemini")
-            // 3. Last resort: "Untitled"
-            let safeTitle = this.currentChatTitle;
+            // 0. Priority: Preserve existing custom title if it's already in one of our folders
+            let existingTitle = null;
+            for (const folder of this.folders) {
+                const found = folder.chats.find(c => c.id === this.currentChatId);
+                if (found) {
+                    existingTitle = found.title;
+                    break;
+                }
+            }
+
+            // Priority for final title:
+            // 1. Existing stored title (manual renames)
+            // 2. Title from header/sidebar (this.currentChatTitle)
+            // 3. document.title (if it's not generic)
+            // 4. Last resort: "Untitled"
+            let safeTitle = existingTitle || this.currentChatTitle;
 
             if (!safeTitle || safeTitle === 'Untitled') {
                 const docTitle = document.title;
-                // If document.title is just "Gemini" or similar, it's not useful
-                if (docTitle && !docTitle.toLowerCase().startsWith('gemini')) {
+                // Common generic placeholders to ignore
+                const genericNames = ['google gemini', 'gemini', 'new chat', 'untitled', 'untitled chat'];
+                const lowTitle = docTitle ? docTitle.toLowerCase() : '';
+
+                if (docTitle && !genericNames.some(g => lowTitle === g || lowTitle.startsWith(g + ' - '))) {
                     safeTitle = docTitle;
-                } else if (docTitle && docTitle.includes(' - ')) {
-                    // "Gemini - Chat Name" -> "Chat Name"
-                    safeTitle = docTitle.split(' - ').pop();
+                    if (safeTitle.includes(' - ')) {
+                        safeTitle = safeTitle.split(' - ').pop();
+                    }
                 }
             }
 
@@ -421,7 +435,7 @@
 
             const chatObj = {
                 id: this.currentChatId,
-                title: safeTitle,
+                title: safeTitle.trim(),
                 url: window.location.href
             };
 

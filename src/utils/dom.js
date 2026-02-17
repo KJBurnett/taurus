@@ -53,33 +53,52 @@ export function waitForElement(selector, parent = document) {
 
 /**
  * Robustly extract the current chat title, avoiding sidebar elements.
+ * @param {string|null} chatId - Optional ID to look up specifically in sidebar.
  * @param {Document|Element} root 
  * @returns {string|null}
  */
-export function getChatTitle(root = document) {
-    // 1. Try a more specific header selector first (Gemini specific)
+export function getChatTitle(chatId = null, root = document) {
+    const isGenericTitle = (text) => {
+        if (!text) return true;
+        const low = text.toLowerCase();
+        return low === 'gemini' ||
+            low === 'google gemini' ||
+            low === 'untitled' ||
+            low === 'untitled chat' ||
+            low === 'new chat' ||
+            low === 'main menu';
+    };
+
+    // 1. If we have a chatId, find the precise item in the sidebar first.
+    // The sidebar usually has the real title even while the header is loading.
+    if (chatId) {
+        const sidebarItems = root.querySelectorAll(Selectors.chatItemClickable);
+        for (const item of sidebarItems) {
+            if (Selectors.getChatIdFromElement(item) === chatId) {
+                const titleEl = item.querySelector(Selectors.chatTitle);
+                if (titleEl) {
+                    const text = titleEl.textContent.trim();
+                    if (text && !isGenericTitle(text)) return text;
+                }
+            }
+        }
+    }
+
+    // 2. Try the specific header selector
     const headerTitle = root.querySelector('[data-test-id="actions-menu-button"] .conversation-title');
     if (headerTitle) {
         const text = headerTitle.textContent.trim();
-        if (text) return text;
+        if (text && !isGenericTitle(text)) return text;
     }
 
-    // 2. Fallback to general search but excluding sidebars
+    // 3. Last resort: general search but excluding sidebars
     const titles = root.querySelectorAll(Selectors.chatTitle);
-
     for (const titleEl of titles) {
-        // Exclude titles in the sidebar (conversations-list)
-        if (titleEl.closest(Selectors.sidebarListContainer)) {
-            continue;
-        }
-        // Exclude titles in the sidebar items container
-        if (titleEl.closest(Selectors.chatItemContainer)) {
-            continue;
-        }
+        if (titleEl.closest(Selectors.sidebarListContainer)) continue;
+        if (titleEl.closest(Selectors.chatItemContainer)) continue;
 
-        // Exclude empty titles
         const text = titleEl.textContent.trim();
-        if (text) return text;
+        if (text && !isGenericTitle(text)) return text;
     }
 
     return null;
