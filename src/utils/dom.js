@@ -50,3 +50,29 @@ export function waitForElement(selector, parent = document) {
         });
     });
 }
+
+/**
+ * Robustly extract the current chat title, avoiding sidebar elements.
+ * @param {Document|Element} root 
+ * @returns {string|null}
+ */
+export function getChatTitle(root = document) {
+    const titles = root.querySelectorAll(Selectors.chatTitle);
+
+    for (const titleEl of titles) {
+        // Exclude titles in the sidebar (conversations-list)
+        if (titleEl.closest(Selectors.sidebarListContainer)) {
+            continue;
+        }
+        // Exclude titles in the sidebar items container
+        if (titleEl.closest(Selectors.chatItemContainer)) {
+            continue;
+        }
+
+        // Exclude empty titles
+        const text = titleEl.textContent.trim();
+        if (text) return text;
+    }
+
+    return null;
+}

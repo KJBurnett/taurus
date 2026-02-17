@@ -1,5 +1,5 @@
 (async () => {
-    const { Selectors, waitForElement } = await import(chrome.runtime.getURL('src/utils/dom.js'));
+    const { Selectors, waitForElement, getChatTitle } = await import(chrome.runtime.getURL('src/utils/dom.js'));
     const { Storage } = await import(chrome.runtime.getURL('src/utils/storage.js'));
     const { DonationModal } = await import(chrome.runtime.getURL('src/components/donation.js'));
 
@@ -221,11 +221,8 @@
         }
 
         updateCurrentChatTitle() {
-            const titleEl = document.querySelector(Selectors.chatTitle);
-            if (titleEl) {
-                const text = titleEl.textContent.trim();
-                this.currentChatTitle = text || 'Untitled';
-            }
+            const title = getChatTitle(document);
+            this.currentChatTitle = title || 'Untitled';
         }
 
         ensureMoveButtonAndIndicator() {
