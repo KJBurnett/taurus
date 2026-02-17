@@ -221,8 +221,7 @@
         }
 
         updateCurrentChatTitle() {
-            const title = getChatTitle(document);
-            this.currentChatTitle = title || 'Untitled';
+            this.currentChatTitle = getChatTitle(document);
         }
 
         ensureMoveButtonAndIndicator() {
@@ -400,7 +399,25 @@
 
             // Check for title one last time
             this.updateCurrentChatTitle();
-            const safeTitle = this.currentChatTitle || (document.title.includes('Gemini') ? 'Untitled Chat' : document.title) || 'Untitled';
+
+            // Priority:
+            // 1. Title from header (this.currentChatTitle)
+            // 2. document.title (if it doesn't just say "Gemini")
+            // 3. Last resort: "Untitled"
+            let safeTitle = this.currentChatTitle;
+
+            if (!safeTitle || safeTitle === 'Untitled') {
+                const docTitle = document.title;
+                // If document.title is just "Gemini" or similar, it's not useful
+                if (docTitle && !docTitle.toLowerCase().startsWith('gemini')) {
+                    safeTitle = docTitle;
+                } else if (docTitle && docTitle.includes(' - ')) {
+                    // "Gemini - Chat Name" -> "Chat Name"
+                    safeTitle = docTitle.split(' - ').pop();
+                }
+            }
+
+            if (!safeTitle) safeTitle = 'Untitled';
 
             const chatObj = {
                 id: this.currentChatId,

@@ -57,6 +57,14 @@ export function waitForElement(selector, parent = document) {
  * @returns {string|null}
  */
 export function getChatTitle(root = document) {
+    // 1. Try a more specific header selector first (Gemini specific)
+    const headerTitle = root.querySelector('[data-test-id="actions-menu-button"] .conversation-title');
+    if (headerTitle) {
+        const text = headerTitle.textContent.trim();
+        if (text) return text;
+    }
+
+    // 2. Fallback to general search but excluding sidebars
     const titles = root.querySelectorAll(Selectors.chatTitle);
 
     for (const titleEl of titles) {
