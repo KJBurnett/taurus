@@ -1,5 +1,5 @@
 (async () => {
-    const { Selectors, waitForElement } = await import(chrome.runtime.getURL('src/utils/dom.js'));
+    const { Selectors, waitForElement, getChatTitle } = await import(chrome.runtime.getURL('src/utils/dom.js'));
     const { Storage } = await import(chrome.runtime.getURL('src/utils/storage.js'));
     const { DonationModal } = await import(chrome.runtime.getURL('src/components/donation.js'));
 
@@ -127,6 +127,7 @@
             }
 
             this.renderFolders();
+            this.autoExpandActiveChatFolder();
         }
 
         async injectSidebar() {
@@ -217,15 +218,12 @@
                     this.updateCurrentChatTitle(); // Try to get it immediately
                 }
                 this.renderFolders(); // Update highlights on nav
+                this.autoExpandActiveChatFolder(); // Proactively expand the folder we are in
             }
         }
 
         updateCurrentChatTitle() {
-            const titleEl = document.querySelector(Selectors.chatTitle);
-            if (titleEl) {
-                const text = titleEl.textContent.trim();
-                this.currentChatTitle = text || 'Untitled';
-            }
+            this.currentChatTitle = getChatTitle(this.currentChatId, document);
         }
 
         ensureMoveButtonAndIndicator() {
@@ -403,11 +401,62 @@
 
             // Check for title one last time
             this.updateCurrentChatTitle();
-            const safeTitle = this.currentChatTitle || (document.title.includes('Gemini') ? 'Untitled Chat' : document.title) || 'Untitled';
+
+            // 0. Priority: Preserve existing custom title if it's already in one of our folders
+            let existingTitle = null;
+            for (const folder of this.folders) {
+                const found = folder.chats.find(c => c.id === this.currentChatId);
+                if (found) {
+                    existingTitle = found.title;
+                    break;
+                }
+            }
+
+            // Priority for final title:
+            // 1. Existing stored title (manual renames)
+            // 2. Title from header/sidebar (this.currentChatTitle)
+            // 3. document.title (if it's not generic)
+            // 4. Last resort: "Untitled"
+            let safeTitle = existingTitle || this.currentChatTitle;
+
+            if (!safeTitle || safeTitle === 'Untitled') {
+                const docTitle = document.title;
+                // Common generic placeholders to ignore
+                const genericNames = ['google gemini', 'gemini', 'new chat', 'untitled', 'untitled chat'];
+                const lowTitle = docTitle ? docTitle.toLowerCase().trim() : '';
+
+                // If docTitle exists and isn't just a generic placeholder
+                if (docTitle && !genericNames.includes(lowTitle)) {
+                    safeTitle = docTitle;
+                    // Fix: If it's "Chat Name - Gemini", we want the "Chat Name" part.
+                    // Previously we were using .pop() which would pick "Gemini"!
+                    if (safeTitle.includes(' - ')) {
+                        const parts = safeTitle.split(' - ');
+                        // If it ends with "Gemini", take the FIRST part.
+                        if (parts[parts.length - 1].toLowerCase().includes('gemini')) {
+                            safeTitle = parts[0];
+                        } else {
+                            // Otherwise take last part (fallback for other formats)
+                            safeTitle = parts[parts.length - 1];
+                        }
+                    }
+                }
+            }
+
+            if (!safeTitle || safeTitle === 'Untitled') {
+                console.warn('[Gemini Folders] Title extraction failed for chat ID:', this.currentChatId);
+                console.warn('[Gemini Folders] Extraction State:', {
+                    currentChatTitle: this.currentChatTitle,
+                    documentTitle: document.title,
+                    existingTitle: existingTitle,
+                    url: window.location.href
+                });
+                safeTitle = 'Untitled';
+            }
 
             const chatObj = {
                 id: this.currentChatId,
-                title: safeTitle,
+                title: safeTitle.trim(),
                 url: window.location.href
             };
 
@@ -908,6 +957,23 @@
                 this.expandedFolders.add(folderId);
             }
             this.renderFolders();
+        }
+
+        autoExpandActiveChatFolder() {
+            if (!this.currentChatId) return;
+
+            let foundFolder = null;
+            for (const folder of this.folders) {
+                if (folder.chats && folder.chats.some(c => c.id === this.currentChatId)) {
+                    foundFolder = folder;
+                    break;
+                }
+            }
+
+            if (foundFolder && !this.expandedFolders.has(foundFolder.id)) {
+                this.expandedFolders.add(foundFolder.id);
+                this.renderFolders();
+            }
         }
     }
 
