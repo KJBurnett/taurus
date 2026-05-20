@@ -127,6 +127,7 @@
             }
 
             this.renderFolders();
+            this.autoExpandActiveChatFolder();
         }
 
         async injectSidebar() {
@@ -217,6 +218,7 @@
                     this.updateCurrentChatTitle(); // Try to get it immediately
                 }
                 this.renderFolders(); // Update highlights on nav
+                this.autoExpandActiveChatFolder(); // Proactively expand the folder we are in
             }
         }
 
@@ -421,17 +423,36 @@
                 const docTitle = document.title;
                 // Common generic placeholders to ignore
                 const genericNames = ['google gemini', 'gemini', 'new chat', 'untitled', 'untitled chat'];
-                const lowTitle = docTitle ? docTitle.toLowerCase() : '';
+                const lowTitle = docTitle ? docTitle.toLowerCase().trim() : '';
 
-                if (docTitle && !genericNames.some(g => lowTitle === g || lowTitle.startsWith(g + ' - '))) {
+                // If docTitle exists and isn't just a generic placeholder
+                if (docTitle && !genericNames.includes(lowTitle)) {
                     safeTitle = docTitle;
+                    // Fix: If it's "Chat Name - Gemini", we want the "Chat Name" part.
+                    // Previously we were using .pop() which would pick "Gemini"!
                     if (safeTitle.includes(' - ')) {
-                        safeTitle = safeTitle.split(' - ').pop();
+                        const parts = safeTitle.split(' - ');
+                        // If it ends with "Gemini", take the FIRST part.
+                        if (parts[parts.length - 1].toLowerCase().includes('gemini')) {
+                            safeTitle = parts[0];
+                        } else {
+                            // Otherwise take last part (fallback for other formats)
+                            safeTitle = parts[parts.length - 1];
+                        }
                     }
                 }
             }
 
-            if (!safeTitle) safeTitle = 'Untitled';
+            if (!safeTitle || safeTitle === 'Untitled') {
+                console.warn('[Gemini Folders] Title extraction failed for chat ID:', this.currentChatId);
+                console.warn('[Gemini Folders] Extraction State:', {
+                    currentChatTitle: this.currentChatTitle,
+                    documentTitle: document.title,
+                    existingTitle: existingTitle,
+                    url: window.location.href
+                });
+                safeTitle = 'Untitled';
+            }
 
             const chatObj = {
                 id: this.currentChatId,
@@ -936,6 +957,23 @@
                 this.expandedFolders.add(folderId);
             }
             this.renderFolders();
+        }
+
+        autoExpandActiveChatFolder() {
+            if (!this.currentChatId) return;
+
+            let foundFolder = null;
+            for (const folder of this.folders) {
+                if (folder.chats && folder.chats.some(c => c.id === this.currentChatId)) {
+                    foundFolder = folder;
+                    break;
+                }
+            }
+
+            if (foundFolder && !this.expandedFolders.has(foundFolder.id)) {
+                this.expandedFolders.add(foundFolder.id);
+                this.renderFolders();
+            }
         }
     }
 
