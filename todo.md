@@ -16,12 +16,12 @@ or require users to recreate folders, aliases, or chat assignments.
   byte-for-byte.
 
 - [ ] **Make sync-write failures observable and restore the persisted UI state.**
-  `Storage.set()` emits an error but resolves successfully when
-  `chrome.runtime.lastError` is set (`src/utils/storage.js:120-139`). Each
-  caller then treats the unsaved data as successful, so edits disappear after a
-  reload. Propagate an actionable failure (or explicitly reload the last saved
-  state) and ensure all mutation callers preserve the user's existing data on
-  quota and other storage errors. Retain local data if migration cannot finish.
+  `Storage.set()` resolves its Promise even when `chrome.runtime.lastError` is
+  set, masking a failed write (`src/utils/storage.js`). Each caller then treats
+  the unsaved data as successful, so edits disappear after a reload. Propagate
+  an actionable failure (or explicitly reload the last saved state) and ensure
+  all mutation callers preserve the user's existing data on quota and other
+  storage errors. Retain local data if migration cannot finish.
 
 - [ ] **Serialize or conflict-check storage mutations.**
   Folder and chat mutations all follow an independent read-modify-write cycle
@@ -58,7 +58,7 @@ or require users to recreate folders, aliases, or chat assignments.
 
 - [ ] **Bound sidebar discovery so the rest of initialization still runs.**
   `waitForElement()` never settles if Gemini changes or omits the sidebar
-  selector (`src/utils/dom.js:34-51`). Consequently `init()` remains blocked at
+  selector (`src/utils/dom.js`). Consequently `init()` remains blocked at
   `await this.injectSidebar()` and never starts header injection, URL tracking,
   storage listeners, or recovery checks (`src/content.js:39-51, 132-178`).
   Add a disconnected timeout/retry path that lets independent features start
