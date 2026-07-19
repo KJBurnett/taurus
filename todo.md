@@ -6,6 +6,15 @@ or require users to recreate folders, aliases, or chat assignments.
 
 ## P0 — Prevent lost or misleading writes
 
+- [ ] **Eliminate stored-data markup injection and title corruption.**
+  Folder names and chat aliases are inserted into `innerHTML`, including
+  attribute values (`src/content.js:354-357, 448-463, 509-518, 755-765,
+  789-794`). Quotes can truncate edit-dialog values and permanently overwrite a
+  title on confirmation; malicious imported data can inject markup into the
+  Gemini page. Use DOM properties (`textContent`, `value`, and `title`) or
+  context-appropriate escaping. Existing names must render and round-trip
+  byte-for-byte.
+
 - [ ] **Make sync-write failures observable and restore the persisted UI state.**
   `Storage.set()` emits an error but resolves successfully when
   `chrome.runtime.lastError` is set (`src/utils/storage.js:120-139`). Each
@@ -45,15 +54,7 @@ or require users to recreate folders, aliases, or chat assignments.
   them; treat absent colors as the existing default so older backups continue
   to import unchanged.
 
-## P2 — Prevent title corruption and extension breakage
-
-- [ ] **Stop interpolating stored names and titles into HTML.**
-  Folder names and chat aliases are inserted into `innerHTML`, including
-  attribute values (`src/content.js:354-357, 448-463, 509-518, 755-765,
-  789-794`). Quotes can truncate edit-dialog values and permanently overwrite a
-  title on confirmation; imported data can also create markup. Use DOM
-  properties (`textContent`, `value`, and `title`) or context-appropriate
-  escaping. Existing names must render and round-trip byte-for-byte.
+## P1 — Prevent extension breakage
 
 - [ ] **Bound sidebar discovery so the rest of initialization still runs.**
   `waitForElement()` never settles if Gemini changes or omits the sidebar
