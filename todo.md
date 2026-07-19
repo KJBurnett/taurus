@@ -44,9 +44,9 @@ or require users to recreate folders, aliases, or chat assignments.
   Import skips such chats (`src/content.js:716-718`) even though the extension
   already reconstructs canonical Gemini URLs from an ID when loading storage
   (`src/utils/storage.js:71-82`). Hydrate missing URLs during import and tell
-  users how many malformed records were skipped instead of always reporting
-  success (`src/content.js:680`). Preserve the current merge behavior for
-  duplicate folders and chats.
+  users how many malformed records were skipped instead of claiming the import
+  completed without skipped records (`src/content.js:680`). Preserve the
+  current merge behavior for duplicate folders and chats.
 
 - [ ] **Preserve imported folder colors.**
   Newly created folders in `mergeImportedData()` copy a name and chats but drop
@@ -62,7 +62,8 @@ or require users to recreate folders, aliases, or chat assignments.
   `await this.injectSidebar()` and never starts header injection, URL tracking,
   storage listeners, or recovery checks (`src/content.js:39-51, 132-178`).
   Add a disconnected timeout/retry path that lets independent features start
-  and retries sidebar injection without leaking observers.
+  and retries sidebar injection without retaining unused `MutationObserver`
+  instances or document event listeners.
 
 ## Regression coverage required for every fix
 
