@@ -31,7 +31,7 @@ or require users to recreate folders, aliases, or chat assignments.
   existing folder IDs, names, colors, aliases, and assignments must merge
   without being overwritten.
 
-## P1 — Keep legacy data and imports usable
+## P1 — Keep legacy data, imports, and extension behavior usable
 
 - [ ] **Complete local-to-sync migration only after a confirmed sync write.**
   Failed migration writes are currently treated as successful, then retried on
@@ -53,8 +53,6 @@ or require users to recreate folders, aliases, or chat assignments.
   `impFolder.color` (`src/content.js:704-711`). Validate known colors and retain
   them; treat absent colors as the existing default so older backups continue
   to import unchanged.
-
-## P1 — Prevent extension breakage
 
 - [ ] **Bound sidebar discovery so the rest of initialization still runs.**
   `waitForElement()` never settles if Gemini changes or omits the sidebar
